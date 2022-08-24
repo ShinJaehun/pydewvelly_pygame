@@ -1,7 +1,10 @@
 from pygame.math import Vector2
 # screen
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 720
+# SCREEN_WIDTH = 1280
+# SCREEN_HEIGHT = 720
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+
 TILE_SIZE = 64
 
 # overlay positions 
