@@ -12,8 +12,8 @@ class Level:
         self.display_surface = pygame.display.get_surface()
 
         # sprite groups
-        # self.all_sprites = pygame.sprite.Group()
         self.all_sprites = CameraGroup()
+        self.collision_sprites = pygame.sprite.Group()
 
         self.setup()
         self.overlay = Overlay(self.player)
@@ -32,7 +32,7 @@ class Level:
 
         # fence
         for x, y, surf, in tmx_data.get_layer_by_name('Fence').tiles():
-            Generic((x * TILE_SIZE, y * TILE_SIZE), surf, self.all_sprites)
+            Generic((x * TILE_SIZE, y * TILE_SIZE), surf, [self.all_sprites, self.collision_sprites])
 
         # water
         water_frames = import_folder('graphics/water')
@@ -41,16 +41,21 @@ class Level:
 
         # trees
         for obj in tmx_data.get_layer_by_name('Trees'):
-            Tree((obj.x, obj.y), obj.image, self.all_sprites, obj.name)
+            Tree((obj.x, obj.y), obj.image, [self.all_sprites, self.collision_sprites], obj.name)
 
         # wildflowers
-        # for x, y, surf, in tmx_data.get_layer_by_name('Decoration').tiles():
-        #     Generic((x * TILE_SIZE, y * TILE_SIZE), surf, self.all_sprites)
-        # 얘네는 이렇게 할 필요가 없다는 거지?
         for obj in tmx_data.get_layer_by_name('Decoration'):
-            WildFlower((obj.x, obj.y), obj.image, self.all_sprites)
+            WildFlower((obj.x, obj.y), obj.image, [self.all_sprites, self.collision_sprites])
 
-        self.player = Player((400, 300), self.all_sprites) 
+        # collision tiles
+        for x, y, surf, in tmx_data.get_layer_by_name('Collision').tiles():
+            Generic((x * TILE_SIZE, y * TILE_SIZE), pygame.Surface((TILE_SIZE, TILE_SIZE)), self.collision_sprites)
+
+        # player
+        for obj in tmx_data.get_layer_by_name('Player'):
+            if obj.name == 'Start':
+                self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites) 
+
         Generic(
             pos = (0, 0),
             surf = pygame.image.load('graphics/world/ground.png').convert_alpha(),
@@ -58,9 +63,7 @@ class Level:
             z = LAYERS['ground']
         )
         # self.player = Player((640, 360), self.all_sprites) # 1280 * 720에서...
-        # self.player = Player((400, 300), self.all_sprites)
-        # 이게 generic 뒤에 있으면 가려서 안 보임...ㅠㅠ 근데 LAYERS 값을 이용해서 레이어를 적용하면 순서 상관 없음
-
+        
     def run(self, dt):
         self.display_surface.fill('black')
         # self.all_sprites.draw(self.display_surface)
@@ -79,12 +82,8 @@ class CameraGroup(pygame.sprite.Group):
         self.offset.x = player.rect.centerx - SCREEN_WIDTH / 2
         self.offset.y = player.rect.centery - SCREEN_HEIGHT / 2 
         for layer in LAYERS.values():
-            # for sprite in self.sprites(): # 근데 이거 sprites()는 어디서 온거야?
             for sprite in sorted(self.sprites(), key = lambda sprite: sprite.rect.centery): 
-                # 이렇게 정렬해주면 object보다 player.y가 위에 있을 때 object 뒤에 player가,
-                # object보다 player.y가 아래에 있을 때 object 앞에 player가 오게 된다!
                 if sprite.z == layer:
                     offset_rect = sprite.rect.copy()
                     offset_rect.center -= self.offset
-                    # self.display_surface.blit(sprite.image, sprite.rect)
                     self.display_surface.blit(sprite.image, offset_rect)
