@@ -11,8 +11,6 @@ class Player(pygame.sprite.Sprite):
         self.frame_index = 0
 
         # general setup
-        # self.image = pygame.Surface((32, 64))
-        # self.image.fill('green')
         self.image = self.animations[self.status][self.frame_index]
         self.rect = self.image.get_rect(center = pos)
 
@@ -28,37 +26,43 @@ class Player(pygame.sprite.Sprite):
 						   'right_axe':[],'left_axe':[],'up_axe':[],'down_axe':[],
 						   'right_water':[],'left_water':[],'up_water':[],'down_water':[]}
         for animation in self.animations.keys():
-            # 잘 모르겠는데 내 경우 subdirectory 경로를 이렇게 지정하니까 import_folder에서 walk()가 제대로 실행되지 않았다.
-            # full_path = '../graphics/character/' + animation
             full_path = 'graphics/character/' + animation
             self.animations[animation] = import_folder(full_path)
-            print(self.animations)
+            # print(self.animations)
+
+    def animate(self, dt):
+        self.frame_index += 4 * dt # 여기서 4를 곱하는 이유는?
+        if self.frame_index >= len(self.animations[self.status]):
+            self.frame_index = 0
+        self.image = self.animations[self.status][int(self.frame_index)]
 
     def input(self):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_UP]:
-            # print('up')
             self.direction.y = -1
+            self.status = 'up'
         elif keys[pygame.K_DOWN]:
-            # print('down')
             self.direction.y = 1
+            self.status = 'down'
         else:
             self.direction.y = 0
 
         if keys[pygame.K_LEFT]:
-            # print('left')
             self.direction.x = -1
+            self.status = 'left'
         elif keys[pygame.K_RIGHT]:
-            # print('right')
             self.direction.x = 1
+            self.status = 'right'
         else:
             self.direction.x = 0
 
-        # print(self.direction)
+    def get_status(self):
+        # add _idle to the status if the player is not moving
+        if self.direction.magnitude() == 0:
+            self.status = self.status.split('_')[0] + '_idle'
 
     def move(self, dt):
-
         # normalize a vector : 대각으로 이동할때 2 ** 1/2의 힘으로 이동하는 것을 제한
         if self.direction.magnitude() > 0:
             self.direction = self.direction.normalize()
@@ -74,4 +78,6 @@ class Player(pygame.sprite.Sprite):
 
     def update(self, dt):
         self.input()
+        self.get_status()
         self.move(dt)
+        self.animate(dt)
