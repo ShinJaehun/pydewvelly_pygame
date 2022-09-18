@@ -29,13 +29,19 @@ class Level:
         
         # sky
         self.rain = Rain(self.all_sprites)
-        self.raining = randint(0,10) > 3
+        self.raining = randint(0,10) > 7
         self.soil_layer.raining = self.raining
         self.sky = Sky()
 
         # shop
         self.menu = Menu(self.player, self.toggle_shop)
         self.shop_active = False
+
+        # music
+        self.success = pygame.mixer.Sound('audio/success.wav')
+        self.success.set_volume(0.3)
+        self.music = pygame.mixer.Sound('audio/music.mp3')
+        self.music.play(loops = -1)
 
     def setup(self):
         tmx_data = load_pygame('data/map.tmx')
@@ -103,6 +109,7 @@ class Level:
     
     def player_add(self, item):
         self.player.item_inventory[item] += 1
+        self.success.play()
 
     def toggle_shop(self):
         self.shop_active = not self.shop_active
@@ -115,7 +122,7 @@ class Level:
         self.soil_layer.remove_water()
 
         # randomize the rain
-        self.raining = randint(0,10) > 3
+        self.raining = randint(0,10) > 7
         self.soil_layer.raining = self.raining
         if self.raining:
             self.soil_layer.water_all()
